@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=19';
-import { db } from './db.js?v=19';
-import * as SCModule from './soundcloud.js?v=19';
+import { store, subscribe, setUser } from './store.js?v=20';
+import { db } from './db.js?v=20';
+import * as SCModule from './soundcloud.js?v=20';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -351,7 +351,7 @@ async function renderFeed(filterTmId = null) {
                     <span class="title">${track.title}</span>
                     <span class="artist">${track.artist}</span>
                     <span class="activity">
-                        ${act.type === 'like' ? '<i class="ph ph-heart"></i> LIKED' : '<i class="ph ph-arrows-left-right"></i> REPOST'} 
+                        ${item.type === 'like' ? '<i class="ph ph-heart"></i> LIKED' : '<i class="ph ph-arrows-left-right"></i> REPOST'} 
                         BY ${tm.username}
                     </span>
                 </div>
