@@ -1,23 +1,20 @@
-import { store, subscribe, setUser } from './store.js';
-import { db } from './db.js';
-import { 
-    initiateAuth, 
-    handleCallback, 
-    getAccessToken, 
-    resolveUser, 
-    getUserLikes, 
-    getUserReposts 
-} from './soundcloud.js';
+import { store, subscribe, setUser } from './store.js?v=2';
+import { db } from './db.js?v=2';
+import * as SCModule from './soundcloud.js?v=2';
 
-// Bundle for easier usage if needed, or use directly
-const SC = { 
-    initiateAuth, 
-    handleCallback, 
-    getAccessToken, 
-    resolveUser, 
-    getUserLikes, 
-    getUserReposts 
+console.log('Main.js loaded');
+console.log('Imported SC Module:', SCModule);
+
+const SC = {
+    initiateAuth: SCModule.initiateAuth,
+    handleCallback: SCModule.handleCallback,
+    getAccessToken: SCModule.getAccessToken,
+    resolveUser: SCModule.resolveUser,
+    getUserLikes: SCModule.getUserLikes,
+    getUserReposts: SCModule.getUserReposts
 };
+
+console.log('Constructed SC Object:', SC);
 
 // DOM Elements
 const loginBtn = document.getElementById('login-btn');
