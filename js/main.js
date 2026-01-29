@@ -41,13 +41,9 @@ async function init() {
     // Auth Listener
     const authChannel = new BroadcastChannel('sc_auth_channel');
     authChannel.onmessage = async (event) => {
-        if (event.data.type === 'oauth_token') {
+        if (event.data.type === 'oauth_code') {
             try {
-                await SC.handleCallback(
-                    event.data.accessToken, 
-                    event.data.state, 
-                    event.data.expiresIn
-                );
+                await SC.handleCallback(event.data.code, event.data.state);
                 loginBtn.textContent = 'Connected';
                 loginBtn.disabled = true;
                 loadData();

@@ -7,32 +7,21 @@
 <body>
     <p>Authenticating with SoundCloud...</p>
     <script>
-        // In Implicit Grant, parameters are in the URL fragment (#)
-        const hash = window.location.hash.substring(1);
-        const params = new URLSearchParams(hash);
-        
-        const accessToken = params.get('access_token');
+        // In PKCE flow, parameters are in the query string (?)
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
         const state = params.get('state');
-        const expiresIn = params.get('expires_in');
+        const error = params.get('error');
 
-        if (accessToken) {
+        if (code && state) {
             const channel = new BroadcastChannel('sc_auth_channel');
-            channel.postMessage({ 
-                type: 'oauth_token', 
-                accessToken, 
-                state, 
-                expiresIn 
-            });
+            channel.postMessage({ type: 'oauth_code', code, state });
             
             document.body.innerHTML = '<p>Success! You can close this window.</p>';
             setTimeout(() => window.close(), 1000);
-        } else {
-            // Check for errors in query params
-            const queryParams = new URLSearchParams(window.location.search);
-            const error = queryParams.get('error');
-            if (error) {
-                document.body.innerHTML = `<p style="color:red">Error: ${error}</p>`;
-            }
+        } else if (error) {
+            document.body.innerHTML = `<p style="color:red">Error: ${error}</p>`;
+            console.error('OAuth Error:', error);
         }
     </script>
 </body>
