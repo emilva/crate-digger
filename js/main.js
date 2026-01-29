@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=5';
-import { db } from './db.js?v=5';
-import * as SCModule from './soundcloud.js?v=5';
+import { store, subscribe, setUser } from './store.js?v=6';
+import { db } from './db.js?v=6';
+import * as SCModule from './soundcloud.js?v=6';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -152,20 +152,32 @@ async function syncTastemaker(tmId) {
 
         const allActivity = [...likes, ...reposts];
         let newItemsCount = 0;
+        
+        // The API returns items sorted by "Newest Liked First".
+        // We want to preserve this order in our feed (which sorts by discoveredAt desc).
+        // So we assign timestamps: Now, Now-1s, Now-2s... 
+        const baseTime = Date.now();
 
-        for (const item of allActivity) {
+        // Iterate with index to calculate relative time
+        for (let i = 0; i < allActivity.length; i++) {
+            const item = allActivity[i];
+            
             // Upsert track
             let trackId;
-            const existingTrack = await db.tracks.where('soundcloudId').equals(item.id).first();
+            // V1 API returns 'id', V2 uses 'id' inside track object. 
+            // Our SC helper normalizes this, but let's be safe.
+            const scId = item.id || item.track?.id;
+            
+            const existingTrack = await db.tracks.where('soundcloudId').equals(scId).first();
             
             if (existingTrack) {
                 trackId = existingTrack.id;
             } else {
                 trackId = await db.tracks.add({
-                    soundcloudId: item.id,
-                    soundcloudUrl: item.permalink_url,
-                    title: item.title,
-                    artist: item.user.username,
+                    soundcloudId: scId,
+                    soundcloudUrl: item.permalink_url || item.track?.permalink_url,
+                    title: item.title || item.track?.title,
+                    artist: item.user?.username || item.track?.user?.username,
                     addedAt: new Date().toISOString()
                 });
             }
@@ -177,11 +189,15 @@ async function syncTastemaker(tmId) {
                 .first();
 
             if (!existingActivity) {
+                // Fix: Use Sync Time - Index to preserve API order
+                // item.created_at is Track Upload Date (wrong for sorting likes)
+                const inferredTime = new Date(baseTime - (i * 1000)).toISOString();
+                
                 await db.activities.add({
                     tasteMakerId: tm.id,
                     trackId: trackId,
                     type: item.type,
-                    discoveredAt: item.created_at || new Date().toISOString()
+                    discoveredAt: inferredTime
                 });
                 newItemsCount++;
             }
