@@ -179,18 +179,29 @@ export async function resolveUser(url) {
 }
 
 export async function getUserLikes(userId) {
-    const data = await fetchAuthenticated(`https://api.soundcloud.com/users/${userId}/favorites?limit=50&linked_partitioning=1`);
-    return (data.collection || []).map(item => ({
-        ...item,
-        type: 'like',
-        created_at: item.created_at
-    }));
+    // Switch to V2 for consistency
+    const data = await fetchAuthenticated(`https://api-v2.soundcloud.com/users/${userId}/likes?limit=50&client_id=${CLIENT_ID}`);
+    
+    return (data.collection || []).map(item => {
+        // V2 'likes' endpoint returns a wrapper object { track: {...}, created_at: ... }
+        // or sometimes just the track if it's the older v2 endpoint. 
+        // Let's handle the wrapper:
+        const track = item.track || item; 
+        return {
+            ...track,
+            type: 'like',
+            created_at: item.created_at || track.created_at
+        };
+    });
 }
 
 export async function getUserReposts(userId) {
-    const data = await fetchAuthenticated(`https://api.soundcloud.com/users/${userId}/reposts?limit=50&linked_partitioning=1`);
+    // Reposts are only available on V2 API
+    // Note: V2 usually requires client_id param even with OAuth
+    const data = await fetchAuthenticated(`https://api-v2.soundcloud.com/users/${userId}/reposts?limit=50&client_id=${CLIENT_ID}`);
+    
     return (data.collection || []).map(item => ({
-        ...item.track,
+        ...item.track, // V2 repost object has 'track' property
         type: 'repost',
         created_at: item.created_at
     }));
