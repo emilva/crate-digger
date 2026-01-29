@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=9';
-import { db } from './db.js?v=9';
-import * as SCModule from './soundcloud.js?v=9';
+import { store, subscribe, setUser } from './store.js?v=10';
+import { db } from './db.js?v=10';
+import * as SCModule from './soundcloud.js?v=10';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -75,8 +75,16 @@ addBtn.addEventListener('click', () => {
 });
 
 resetBtn.addEventListener('click', async () => {
-    if (confirm('Are you sure you want to delete all data? This cannot be undone.')) {
-        await db.delete();
+    if (confirm('Are you sure you want to clear all discovered tracks? Your tastemaker list will be preserved.')) {
+        await db.activities.clear();
+        await db.tracks.clear();
+        
+        // Reset lastSynced for all tastemakers
+        const tms = await db.tastemakers.toArray();
+        for (const tm of tms) {
+            await db.tastemakers.update(tm.id, { lastSynced: 0 });
+        }
+        
         window.location.reload();
     }
 });
