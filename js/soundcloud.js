@@ -120,6 +120,12 @@ export async function refreshAccessToken() {
         refresh_token: authData.refreshToken
     });
 
+    // Local Development Hack: Inject secret for refresh too
+    const localSecret = localStorage.getItem('SC_SECRET');
+    if (localSecret) {
+        params.append('client_secret', localSecret);
+    }
+
     const response = await fetch('https://secure.soundcloud.com/oauth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
