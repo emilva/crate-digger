@@ -1,6 +1,23 @@
 import { store, subscribe, setUser } from './store.js';
 import { db } from './db.js';
-import * as SC from './soundcloud.js';
+import { 
+    initiateAuth, 
+    handleCallback, 
+    getAccessToken, 
+    resolveUser, 
+    getUserLikes, 
+    getUserReposts 
+} from './soundcloud.js';
+
+// Bundle for easier usage if needed, or use directly
+const SC = { 
+    initiateAuth, 
+    handleCallback, 
+    getAccessToken, 
+    resolveUser, 
+    getUserLikes, 
+    getUserReposts 
+};
 
 // DOM Elements
 const loginBtn = document.getElementById('login-btn');
@@ -43,7 +60,12 @@ async function init() {
 
 // Event Listeners
 loginBtn.addEventListener('click', () => {
-    SC.initiateAuth();
+    if (typeof SC.initiateAuth === 'function') {
+        SC.initiateAuth();
+    } else {
+        console.error('SC.initiateAuth is not a function. SC object:', SC);
+        alert('Internal Error: SoundCloud auth function not loaded. Please refresh.');
+    }
 });
 
 syncAllBtn.addEventListener('click', () => {
@@ -229,6 +251,11 @@ function playTrack(url) {
 db.version(2).stores({
     activities: '++id, tasteMakerId, trackId, type, [tasteMakerId+trackId+type], discoveredAt'
 });
+
+async function loadData() {
+    renderTastemakers();
+    renderFeed();
+}
 
 // Store subscriptions
 subscribe(state => {
