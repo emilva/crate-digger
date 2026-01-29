@@ -14,7 +14,56 @@ const REDIRECT_URI = (() => {
 })();
 
 // PKCE Helpers
-// ... (omitting for brevity)
+function generateRandomString(length) {
+    const array = new Uint8Array(length);
+    window.crypto.getRandomValues(array);
+    return Array.from(array, dec => ('0' + dec.toString(16)).substr(-2)).join('');
+}
+
+async function sha256(plain) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(plain);
+    return window.crypto.subtle.digest('SHA-256', data);
+}
+
+function base64UrlEncode(a) {
+    let str = "";
+    const bytes = new Uint8Array(a);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        str += String.fromCharCode(bytes[i]);
+    }
+    return btoa(str)
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=+$/, "");
+}
+
+async function generateCodeChallenge(v) {
+    const hashed = await sha256(v);
+    return base64UrlEncode(hashed);
+}
+
+export async function initiateAuth() {
+    const verifier = generateRandomString(64);
+    const challenge = await generateCodeChallenge(verifier);
+    const state = generateRandomString(16);
+
+    // Store verifier in sessionStorage (short-lived)
+    sessionStorage.setItem('sc_verifier', verifier);
+    sessionStorage.setItem('sc_state', state);
+
+    const authUrl = new URL('https://secure.soundcloud.com/authorize');
+    authUrl.searchParams.append('client_id', CLIENT_ID);
+    authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
+    authUrl.searchParams.append('response_type', 'code');
+    authUrl.searchParams.append('code_challenge', challenge);
+    authUrl.searchParams.append('code_challenge_method', 'S256');
+    authUrl.searchParams.append('state', state);
+
+    // Open popup
+    window.open(authUrl.toString(), 'sc_auth', 'width=500,height=700');
+}
 
 export async function handleCallback(code, state) {
     const savedState = sessionStorage.getItem('sc_state');
