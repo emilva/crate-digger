@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=14';
-import { db } from './db.js?v=14';
-import * as SCModule from './soundcloud.js?v=14';
+import { store, subscribe, setUser } from './store.js?v=15';
+import { db } from './db.js?v=15';
+import * as SCModule from './soundcloud.js?v=15';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -232,6 +232,7 @@ async function syncTastemaker(tmId) {
         
         console.log(`Synced ${tm.username}: ${newItemsCount} new items`);
         renderFeed();
+        renderTastemakers();
     } catch (err) {
         console.error(`Failed to sync ${tm.username}`, err);
     } finally {
