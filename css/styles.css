@@ -51,6 +51,30 @@ body {
     color: var(--text-primary);
 }
 
+button#login-btn {
+    background-color: #ff5500;
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+}
+
+button#login-btn:hover {
+    background-color: #eb4e00;
+}
+
+button#login-btn:disabled {
+    background-color: #333;
+    color: #888;
+    cursor: default;
+}
+
 button {
     background-color: var(--bg-card);
     color: var(--text-primary);

@@ -12,6 +12,8 @@ const tastemakerList = document.getElementById('tastemakers-list');
 const feedList = document.getElementById('feed-list');
 const playerContainer = document.getElementById('player-container');
 
+const syncAllBtn = document.getElementById('sync-all-btn');
+
 // Initialization
 async function init() {
     // Check auth status
@@ -44,6 +46,10 @@ loginBtn.addEventListener('click', () => {
     SC.initiateAuth();
 });
 
+syncAllBtn.addEventListener('click', () => {
+    syncAll();
+});
+
 addBtn.addEventListener('click', () => {
     addModal.showModal();
 });
@@ -73,20 +79,156 @@ confirmAddBtn.addEventListener('click', async (e) => {
     }
 });
 
+// Actions
+async function syncTastemaker(tmId) {
+    const tm = await db.tastemakers.get(tmId);
+    if (!tm) return;
+
+    store.loading = true;
+    try {
+        const [likes, reposts] = await Promise.all([
+            SC.getUserLikes(tm.soundcloudId),
+            SC.getUserReposts(tm.soundcloudId)
+        ]);
+
+        const allActivity = [...likes, ...reposts];
+        let newItemsCount = 0;
+
+        for (const item of allActivity) {
+            // Upsert track
+            let trackId;
+            const existingTrack = await db.tracks.where('soundcloudId').equals(item.id).first();
+            
+            if (existingTrack) {
+                trackId = existingTrack.id;
+            } else {
+                trackId = await db.tracks.add({
+                    soundcloudId: item.id,
+                    soundcloudUrl: item.permalink_url,
+                    title: item.title,
+                    artist: item.user.username,
+                    addedAt: new Date().toISOString()
+                });
+            }
+
+            // Check if activity already exists
+            const existingActivity = await db.activities
+                .where('[tasteMakerId+trackId+type]')
+                .equals([tm.id, trackId, item.type])
+                .first();
+
+            if (!existingActivity) {
+                await db.activities.add({
+                    tasteMakerId: tm.id,
+                    trackId: trackId,
+                    type: item.type,
+                    discoveredAt: item.created_at || new Date().toISOString()
+                });
+                newItemsCount++;
+            }
+        }
+
+        await db.tastemakers.update(tmId, { lastSynced: new Date().toISOString() });
+        console.log(`Synced ${tm.username}: ${newItemsCount} new items`);
+        renderFeed();
+    } catch (err) {
+        console.error(`Failed to sync ${tm.username}`, err);
+    } finally {
+        store.loading = false;
+    }
+}
+
+async function syncAll() {
+    const tms = await db.tastemakers.toArray();
+    for (const tm of tms) {
+        await syncTastemaker(tm.id);
+    }
+}
+
 // Rendering
 async function renderTastemakers() {
     const list = await db.tastemakers.toArray();
     tastemakerList.innerHTML = list.map(tm => `
         <div class="tastemaker-item" data-id="${tm.id}">
-            <span>${tm.username}</span>
+            <div class="tm-info">
+                <span class="tm-name">${tm.username}</span>
+                <span class="tm-meta">Last sync: ${tm.lastSynced ? new Date(tm.lastSynced).toLocaleDateString() : 'Never'}</span>
+            </div>
+            <button class="sync-tm-btn" data-id="${tm.id}">🔄</button>
         </div>
     `).join('');
+
+    // Add listeners to individual sync buttons
+    document.querySelectorAll('.sync-tm-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            syncTastemaker(parseInt(btn.dataset.id));
+        });
+    });
 }
 
-async function loadData() {
-    renderTastemakers();
-    // Load feed...
+async function renderFeed() {
+    // Get all activities sorted by date
+    const activities = await db.activities.orderBy('discoveredAt').reverse().toArray();
+    if (activities.length === 0) {
+        feedList.innerHTML = '<div class="empty-state">No tracks discovered yet. Add a tastemaker and sync!</div>';
+        return;
+    }
+
+    // Fetch tracks and tastemakers for enrichment
+    const tracks = await db.tracks.toArray();
+    const tms = await db.tastemakers.toArray();
+    
+    const trackMap = new Map(tracks.map(t => [t.id, t]));
+    const tmMap = new Map(tms.map(tm => [tm.id, tm]));
+
+    feedList.innerHTML = activities.map(act => {
+        const track = trackMap.get(act.trackId);
+        const tm = tmMap.get(act.tasteMakerId);
+        if (!track || !tm) return '';
+
+        return `
+            <div class="track-card">
+                <div class="track-info">
+                    <span class="title">${track.title}</span>
+                    <span class="artist">${track.artist}</span>
+                    <span class="activity">${act.type === 'like' ? '❤️ Liked' : '🔁 Reposted'} by ${tm.username}</span>
+                </div>
+                <div class="track-actions">
+                    <button class="play-btn" data-url="${track.soundcloudUrl}">Play</button>
+                    <a href="${track.soundcloudUrl}" target="_blank" class="sc-link">View on SC</a>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Add play listeners
+    document.querySelectorAll('.play-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const url = btn.dataset.url;
+            playTrack(url);
+        });
+    });
 }
+
+function playTrack(url) {
+    const widgetElement = document.getElementById('sc-widget');
+    if (!widgetElement) {
+        playerContainer.innerHTML = `
+            <iframe id="sc-widget" width="100%" height="166" scrolling="no" frameborder="no" allow="autoplay"
+                src="https://w.soundcloud.com/player/?url=${encodeURIComponent(url)}&auto_play=true">
+            </iframe>
+        `;
+    } else {
+        const widget = SC.Widget(widgetElement);
+        widget.load(url, { auto_play: true });
+    }
+}
+
+// Update db schema to support the composite key we used
+db.version(2).stores({
+    activities: '++id, tasteMakerId, trackId, type, [tasteMakerId+trackId+type], discoveredAt'
+});
 
 // Store subscriptions
 subscribe(state => {
