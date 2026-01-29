@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=17';
-import { db } from './db.js?v=17';
-import * as SCModule from './soundcloud.js?v=17';
+import { store, subscribe, setUser } from './store.js?v=18';
+import { db } from './db.js?v=18';
+import * as SCModule from './soundcloud.js?v=18';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -293,8 +293,11 @@ async function renderTastemakers() {
 }
 
 async function renderFeed(filterTmId = null) {
+    console.log('renderFeed called with filter:', filterTmId);
+    
     // Fetch all needed data first
     let activities = await db.activities.toArray();
+    console.log('Total activities in DB:', activities.length);
     
     // Filter if requested
     if (filterTmId) {
@@ -302,6 +305,8 @@ async function renderFeed(filterTmId = null) {
     }
 
     const tracks = await db.tracks.toArray();
+    console.log('Total tracks in DB:', tracks.length);
+    
     const tms = await db.tastemakers.toArray();
     
     const trackMap = new Map(tracks.map(t => [t.id, t]));
@@ -311,10 +316,15 @@ async function renderFeed(filterTmId = null) {
     const enrichedFeed = activities.map(act => {
         const track = trackMap.get(act.trackId);
         const tm = tmMap.get(act.tasteMakerId);
+        if (!track) console.warn('Missing track for activity:', act);
+        if (!tm) console.warn('Missing tastemaker for activity:', act);
+        
         if (!track || !tm) return null;
         
         return { ...act, track, tm };
     }).filter(item => item !== null);
+    
+    console.log('Enriched feed length:', enrichedFeed.length);
 
     // Sort based on selection
     const sortBy = sortSelect.value; // 'discovered' or 'released'
