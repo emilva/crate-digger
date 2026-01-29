@@ -1,22 +1,24 @@
 :root {
-    /* Color Palette - Industrial / Dark */
-    --bg-root: #050505;
-    --bg-surface: #111111;
-    --bg-surface-hover: #1a1a1a;
+    /* Palette: Refined Dark */
+    --bg-root: #09090b; /* Zinc 950 */
+    --bg-sidebar: #18181b; /* Zinc 900 */
+    --bg-card: #27272a; /* Zinc 800 */
+    --bg-card-hover: #3f3f46; /* Zinc 700 */
     
-    --border-light: #333333;
-    --border-heavy: #555555;
+    --border: #27272a; /* Zinc 800 */
+    --border-highlight: #3f3f46;
     
-    --accent: #ff5500; /* SC Orange */
-    --accent-dim: #993300;
+    /* The "Respectful" Orange */
+    --accent: #ff5500;
+    --accent-glow: rgba(255, 85, 0, 0.15);
     
-    --text-main: #e0e0e0;
-    --text-dim: #666666;
-    --text-inverse: #000000;
+    --text-main: #fafafa; /* Zinc 50 */
+    --text-dim: #a1a1aa; /* Zinc 400 */
+    --text-dark: #000000;
 
     /* Typography */
-    --font-head: 'Archivo Black', sans-serif;
-    --font-mono: 'Space Mono', monospace;
+    --font-head: 'Plus Jakarta Sans', sans-serif;
+    --font-body: 'Inter', sans-serif;
     
     /* Spacing */
     --space-xs: 4px;
@@ -24,10 +26,14 @@
     --space-md: 16px;
     --space-lg: 24px;
     
+    /* Radius */
+    --radius-sm: 6px;
+    --radius-md: 12px;
+    
     /* Layout */
-    --header-height: 64px;
-    --sidebar-width: 280px;
-    --player-height: 166px; /* Standard SC Widget Height */
+    --header-height: 60px;
+    --sidebar-width: 260px;
+    --player-height: 90px;
 }
 
 * {
@@ -39,25 +45,26 @@
 body {
     background-color: var(--bg-root);
     color: var(--text-main);
-    font-family: var(--font-mono); /* Default to mono for that 'terminal' feel */
+    font-family: var(--font-body);
     font-size: 14px;
     height: 100vh;
     overflow: hidden;
-    line-height: 1.4;
+    line-height: 1.5;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
-/* Scrollbars */
+/* Scrollbars - Minimal */
 ::-webkit-scrollbar {
-    width: 8px;
-    background: var(--bg-root);
+    width: 6px;
+    background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: var(--border-light);
-    border: 1px solid var(--bg-root);
+    background: var(--border-highlight);
+    border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--accent);
+    background: var(--text-dim);
 }
 
 #app {
@@ -68,40 +75,35 @@ body {
 
 /* --- Header --- */
 .app-header {
-    background-color: var(--bg-root);
-    border-bottom: 1px solid var(--border-light);
+    background-color: rgba(9, 9, 11, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 var(--space-lg);
+    z-index: 50;
 }
 
 .logo {
     font-family: var(--font-head);
-    font-size: 1.5rem;
-    text-transform: uppercase;
-    letter-spacing: -1px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: -0.02em;
     color: var(--text-main);
     display: flex;
     align-items: center;
-    gap: var(--space-sm);
+    gap: 8px;
 }
 
-.logo::before {
+.logo::after {
     content: '';
     display: block;
-    width: 12px;
-    height: 12px;
+    width: 6px;
+    height: 6px;
     background-color: var(--accent);
-}
-
-/* Auth Status / Login */
-#auth-status button {
-    font-family: var(--font-mono);
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 0.5px;
+    border-radius: 50%;
+    margin-top: 4px;
 }
 
 /* --- Sidebar --- */
@@ -112,317 +114,363 @@ body {
 }
 
 .sidebar {
-    background-color: var(--bg-root);
-    border-right: 1px solid var(--border-light);
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
 }
 
 .sidebar-header {
-    padding: var(--space-md);
-    border-bottom: 1px solid var(--border-light);
+    padding: 20px var(--space-md);
     display: flex;
     justify-content: space-between;
     align-items: center;
+    border-bottom: 1px solid var(--border);
 }
 
 .sidebar-header h2 {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 600;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
     color: var(--text-dim);
-    letter-spacing: 1px;
+}
+
+.icon-btn {
+    background: transparent;
+    border: 1px solid var(--border-highlight);
+    color: var(--text-dim);
+    width: 28px; height: 28px;
+    border-radius: var(--radius-sm);
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.icon-btn:hover {
+    border-color: var(--text-main);
+    color: var(--text-main);
 }
 
 .tastemakers-list {
     flex: 1;
     overflow-y: auto;
-    padding: var(--space-sm);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .tastemaker-item {
-    padding: var(--space-sm);
-    margin-bottom: 2px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
     display: flex;
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
-    border: 1px solid transparent;
-    transition: all 0.2s;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--text-dim);
+    transition: all 0.15s ease;
+    border-left: 2px solid transparent;
 }
 
 .tastemaker-item:hover {
-    background-color: var(--bg-surface);
-    border-color: var(--border-light);
+    background-color: rgba(255,255,255,0.03);
+    color: var(--text-main);
+}
+
+.tastemaker-item.active {
+    background-color: rgba(255,255,255,0.05);
+    color: var(--text-main);
+    border-left-color: var(--accent);
 }
 
 .tm-info {
     display: flex;
     flex-direction: column;
-}
-
-.tm-name {
-    font-weight: 700;
+    gap: 2px;
 }
 
 .tm-meta {
     font-size: 0.7rem;
     color: var(--text-dim);
+    opacity: 0.7;
 }
 
 .sync-tm-btn {
     background: none;
     border: none;
     color: var(--text-dim);
+    opacity: 0;
+    transition: all 0.2s;
+    cursor: pointer;
     font-size: 1rem;
-    padding: 4px;
 }
+.tastemaker-item:hover .sync-tm-btn { opacity: 1; }
+.sync-tm-btn:hover { color: var(--text-main); transform: rotate(180deg); }
 
-.sync-tm-btn:hover {
-    color: var(--accent);
-    background: none;
-    border: none;
-}
-
+/* --- Sidebar Footer & Buttons --- */
 .sidebar-footer {
     padding: var(--space-md);
-    border-top: 1px solid var(--border-light);
-    background-color: var(--bg-surface);
+    border-top: 1px solid var(--border);
+    background-color: var(--bg-sidebar);
 }
+
+button.primary {
+    width: 100%;
+    background-color: var(--text-main); /* White button */
+    color: var(--bg-root); /* Black text */
+    border: none;
+    padding: 10px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: transform 0.1s, opacity 0.2s;
+    font-family: var(--font-body);
+}
+button.primary:hover { opacity: 0.9; }
+button.primary:active { transform: scale(0.98); }
+
+button#reset-btn {
+    width: 100%;
+    margin-top: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+button#reset-btn:hover { color: #ef4444; /* Red for destructive action */ }
 
 /* --- Feed --- */
 .feed-container {
-    background-color: var(--bg-surface);
+    background-color: var(--bg-root);
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    position: relative;
-}
-
-/* Optional grid background pattern for 'technical' feel */
-.feed-container::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background-image: 
-        linear-gradient(var(--border-light) 1px, transparent 1px),
-        linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
-    background-size: 40px 40px;
-    opacity: 0.05;
-    pointer-events: none;
 }
 
 .feed-header {
-    padding: var(--space-md) var(--space-lg);
-    border-bottom: 1px solid var(--border-light);
+    padding: 32px 40px 24px 40px;
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    background-color: var(--bg-root);
-    z-index: 10;
+    align-items: baseline;
+    border-bottom: 1px solid var(--border);
 }
 
 .feed-header h2 {
     font-family: var(--font-head);
-    text-transform: uppercase;
-    font-size: 1.2rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: -0.02em;
 }
 
 .feed-list {
     flex: 1;
     overflow-y: auto;
-    padding: var(--space-lg);
+    padding: 24px 40px;
     display: flex;
     flex-direction: column;
-    gap: var(--space-md);
-    z-index: 5;
+    gap: 16px;
 }
 
-/* Track Card - The "Manifest" Look */
+/* --- Track Card (Refined) --- */
 .track-card {
-    background-color: var(--bg-root);
-    border: 1px solid var(--border-light);
-    padding: 0;
+    background-color: transparent;
+    border-bottom: 1px solid var(--border);
+    padding: 16px 0;
     display: grid;
-    grid-template-columns: 60px 1fr auto; /* Art placeholder, Info, Actions */
-    gap: var(--space-md);
-    transition: transform 0.2s, border-color 0.2s;
-    position: relative;
-}
-
-.track-card::before {
-    /* Status indicator strip */
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 4px;
-    background-color: var(--border-light);
+    grid-template-columns: 64px 1fr auto;
+    gap: 20px;
+    align-items: center;
     transition: background-color 0.2s;
 }
 
-.track-card:hover {
-    border-color: var(--text-dim);
-    transform: translateX(4px);
-}
+.track-card:last-child { border-bottom: none; }
 
-.track-card:hover::before {
-    background-color: var(--accent);
+.track-card:hover {
+    /* No background change, keeps it clean. Just simple interaction. */
 }
 
 .track-art-placeholder {
-    width: 60px;
-    height: 100%;
-    background-color: var(--bg-surface-hover);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
+    width: 64px; height: 64px;
+    background-color: var(--bg-card);
+    border-radius: var(--radius-sm);
+    display: grid;
+    place-items: center;
     color: var(--text-dim);
-    border-right: 1px solid var(--border-light);
+    font-size: 24px;
+    transition: color 0.2s;
 }
+.track-card:hover .track-art-placeholder { color: var(--accent); }
 
 .track-info {
-    padding: var(--space-md) 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    gap: 4px;
 }
 
 .track-info .title {
-    font-weight: 700;
-    font-size: 1.1rem;
+    font-weight: 600;
+    font-size: 1rem;
     color: var(--text-main);
-    margin-bottom: 4px;
 }
 
 .track-info .artist {
-    color: var(--text-dim);
     font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+    color: var(--text-dim);
 }
 
 .track-info .activity {
     font-size: 0.75rem;
     color: var(--accent);
-    margin-top: 8px;
-    display: inline-block;
-    padding: 2px 6px;
-    border: 1px solid var(--accent-dim);
-    background-color: rgba(255, 85, 0, 0.1);
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
 }
 
 .track-actions {
-    padding: var(--space-md);
     display: flex;
     align-items: center;
-    gap: var(--space-sm);
-    border-left: 1px solid var(--border-light);
+    gap: 12px;
 }
 
-/* --- Buttons --- */
-button {
-    font-family: var(--font-mono);
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    padding: 10px 16px;
-    border: 1px solid var(--border-light);
-    background-color: var(--bg-root);
+/* Play Button - The subtle orange usage */
+button.play-btn {
+    background: transparent;
+    border: 1px solid var(--border-highlight);
     color: var(--text-main);
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s;
+    font-family: var(--font-body);
 }
 
-button:hover {
-    background-color: var(--text-main);
-    color: var(--bg-root);
-    border-color: var(--text-main);
-}
-
-button.primary {
-    background-color: var(--accent);
+button.play-btn:hover {
     border-color: var(--accent);
-    color: var(--text-inverse);
-    font-weight: 700;
+    color: var(--accent);
+    background: var(--accent-glow);
 }
 
-button.primary:hover {
-    background-color: #fff;
-    border-color: #fff;
-    color: #000;
+.sc-link {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 0.85rem;
 }
+.sc-link:hover { color: var(--text-main); }
 
-.icon-btn {
-    padding: 4px 8px;
-    font-size: 1.2rem;
+/* --- Badges --- */
+.tm-badge {
+    background-color: var(--accent-glow);
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 8px;
+    display: inline-block;
 }
 
 /* --- Player --- */
 .player-bar {
-    background-color: var(--bg-root);
-    border-top: 2px solid var(--accent); /* Top accent line */
+    background-color: rgba(24, 24, 27, 0.95); /* Zinc 900 with opacity */
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border);
     height: var(--player-height);
     z-index: 100;
+    /* Box shadow to lift it */
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
 }
 
-/* --- Modal --- */
+/* --- Select --- */
+select#feed-sort {
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: right;
+    padding-right: 0;
+}
+select#feed-sort:hover { color: var(--text-main); }
+select#feed-sort:focus { outline: none; }
+
+/* --- Modals --- */
 dialog {
-    background-color: var(--bg-root);
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-highlight);
+    border-radius: var(--radius-md);
     color: var(--text-main);
-    border: 1px solid var(--border-light);
-    padding: var(--space-lg);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-    max-width: 400px;
+    padding: 32px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    max-width: 420px;
     width: 100%;
 }
-
-dialog::backdrop {
-    background-color: rgba(0,0,0,0.8);
-    backdrop-filter: blur(2px);
-}
+dialog::backdrop { background-color: rgba(0,0,0,0.7); backdrop-filter: blur(4px); }
 
 dialog h3 {
-    font-family: var(--font-head);
-    text-transform: uppercase;
-    margin-bottom: var(--space-md);
+    margin-bottom: 20px;
+    font-weight: 600;
+    font-size: 1.2rem;
 }
 
 input[type="text"] {
     width: 100%;
+    background-color: var(--bg-root);
+    border: 1px solid var(--border-highlight);
+    border-radius: var(--radius-sm);
     padding: 12px;
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border-light);
     color: var(--text-main);
-    font-family: var(--font-mono);
-    margin-bottom: var(--space-lg);
+    font-size: 1rem;
+    margin-bottom: 24px;
+    font-family: var(--font-body);
 }
-
 input[type="text"]:focus {
     outline: none;
     border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent-glow);
 }
 
-.modal-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: var(--space-sm);
+.modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
+.modal-actions button[value="cancel"] {
+    background: transparent; border: none; color: var(--text-dim); cursor: pointer; font-weight: 500;
 }
+.modal-actions button[value="cancel"]:hover { color: var(--text-main); }
 
-/* --- Utilities --- */
-.empty-state {
-    text-align: center;
-    color: var(--text-dim);
-    margin-top: 100px;
-    border: 1px dashed var(--border-light);
-    padding: var(--space-lg);
+button#confirm-add-btn {
+    background-color: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    cursor: pointer;
+}
+button#confirm-add-btn:hover { filter: brightness(1.1); }
+
+/* --- Login Button --- */
+button#login-btn {
+    background-color: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
     font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-family: var(--font-body);
 }
-
-.tm-badge {
-    color: var(--accent);
-    font-size: 0.7rem;
-    font-weight: 700;
-    margin-left: 8px;
-    border: 1px solid var(--accent-dim);
-    padding: 1px 4px;
-    background: rgba(255, 85, 0, 0.1);
-}
+button#login-btn:hover { background-color: #ff6622; }

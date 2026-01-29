@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=16';
-import { db } from './db.js?v=16';
-import * as SCModule from './soundcloud.js?v=16';
+import { store, subscribe, setUser } from './store.js?v=17';
+import { db } from './db.js?v=17';
+import * as SCModule from './soundcloud.js?v=17';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -344,7 +344,7 @@ async function renderFeed(filterTmId = null) {
         return `
             <div class="track-card">
                 <div class="track-art-placeholder">
-                    <i class="ph ph-vinyl-record"></i>
+                    <i class="ph-fill ph-disc"></i>
                 </div>
                 <div class="track-info">
                     <span class="title">${track.title}</span>

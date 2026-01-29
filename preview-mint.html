@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crate Digger - Midnight Mint</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://unpkg.com/dexie@latest/dist/dexie.mjs" type="module"></script>
+    <script src="https://w.soundcloud.com/player/api.js"></script>
+
+    <style>
+        :root {
+            /* Palette: Midnight Mint */
+            --bg-root: #0b0e14;
+            --bg-surface: #151a25;
+            --bg-surface-hover: #1e2532;
+            
+            --border: #2a3441;
+            
+            --accent: #20e0b0; /* Mint */
+            --accent-dim: #136b56;
+            --accent-text: #0b0e14;
+            
+            --text-main: #edf2f7;
+            --text-dim: #8899ac;
+
+            /* Softness */
+            --radius-sm: 8px;
+            --radius-md: 16px;
+            --radius-lg: 24px;
+            
+            /* Fonts */
+            --font-head: 'Inter', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            
+            /* Dimensions */
+            --header-height: 70px;
+            --sidebar-width: 280px;
+            --player-height: 90px; /* Taller for modern feel */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: var(--bg-root);
+            color: var(--text-main);
+            font-family: var(--font-body);
+            font-size: 15px;
+            height: 100vh;
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- Layout --- */
+        #app {
+            display: grid;
+            grid-template-rows: var(--header-height) 1fr auto;
+            height: 100vh;
+        }
+
+        .app-layout {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            overflow: hidden;
+        }
+
+        /* --- Header --- */
+        .app-header {
+            background-color: var(--bg-root);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo {
+            font-family: var(--font-head);
+            font-weight: 800;
+            font-size: 1.4rem;
+            letter-spacing: -0.03em;
+            background: linear-gradient(90deg, #fff, var(--text-dim));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- Sidebar --- */
+        .sidebar {
+            background-color: var(--bg-surface);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            border-right: 1px solid var(--border);
+        }
+
+        .sidebar-header {
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 8px;
+        }
+
+        .sidebar-header h2 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-dim);
+            font-weight: 600;
+        }
+
+        .icon-btn {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: var(--text-main);
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover { background: var(--accent); color: var(--accent-text); }
+
+        .tastemakers-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .tastemaker-item {
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .tastemaker-item:hover, .tastemaker-item.active {
+            background-color: var(--bg-surface-hover);
+            color: #fff;
+        }
+        
+        .tastemaker-item.active {
+            box-shadow: inset 3px 0 0 var(--accent);
+        }
+
+        .tm-meta {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            display: block;
+            margin-top: 2px;
+        }
+
+        .sync-tm-btn {
+            opacity: 0;
+            background: none; border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tastemaker-item:hover .sync-tm-btn { opacity: 1; }
+        .sync-tm-btn:hover { color: var(--accent); transform: rotate(180deg); }
+
+        .tm-badge {
+            background-color: var(--accent);
+            color: var(--accent-text);
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 700;
+            margin-left: 6px;
+        }
+
+        /* --- Feed --- */
+        .feed-container {
+            background-color: var(--bg-root);
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        .feed-header {
+            padding: 32px 40px 16px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .feed-header h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .feed-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 40px 40px 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Modern Card */
+        .track-card {
+            background-color: var(--bg-surface);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 56px 1fr auto;
+            gap: 20px;
+            align-items: center;
+            border: 1px solid transparent;
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .track-card:hover {
+            border-color: var(--border);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            background-color: var(--bg-surface-hover);
+        }
+
+        .track-art-placeholder {
+            width: 56px; height: 56px;
+            background: linear-gradient(135deg, var(--bg-surface-hover), var(--border));
+            border-radius: var(--radius-sm);
+            display: grid;
+            place-items: center;
+            font-size: 24px;
+            color: var(--text-dim);
+        }
+
+        .track-info .title {
+            display: block;
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+            color: #fff;
+        }
+
+        .track-info .artist {
+            font-size: 0.95rem;
+            color: var(--text-dim);
+        }
+
+        .track-info .activity {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            margin-top: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .track-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Buttons */
+        button.play-btn {
+            background-color: var(--text-main);
+            color: var(--bg-root);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button.play-btn:hover {
+            background-color: var(--accent);
+            color: var(--accent-text);
+            transform: scale(1.05);
+        }
+
+        .sc-link {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            padding: 10px;
+        }
+        .sc-link:hover { color: var(--text-main); }
+
+        /* --- Footer --- */
+        .player-bar {
+            background-color: var(--bg-surface);
+            border-top: 1px solid var(--border);
+            height: var(--player-height);
+            padding: 0;
+            position: relative;
+            z-index: 100;
+        }
+
+        /* --- Utilities --- */
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        button.primary {
+            width: 100%;
+            background: var(--accent);
+            color: var(--accent-text);
+            border: none;
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 8px;
+        }
+        button.primary:hover { filter: brightness(1.1); }
+
+        button#reset-btn {
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+        button#reset-btn:hover { border-color: var(--text-dim); color: var(--text-main); }
+
+        select#feed-sort {
+            background: var(--bg-surface);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: var(--radius-sm);
+            font-family: var(--font-body);
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <div class="logo">
+                <i class="ph-fill ph-vinyl-record" style="color:var(--accent); margin-right:8px;"></i>
+                Crate Digger
+            </div>
+            <div class="user-controls" id="auth-status">
+                <button id="login-btn" style="background:var(--accent); color:var(--accent-text); border:none; padding:8px 16px; border-radius:20px; font-weight:700;">
+                    Connect
+                </button>
+            </div>
+        </header>
+
+        <main class="app-layout">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Library</h2>
+                    <button id="add-tastemaker-btn" class="icon-btn"><i class="ph ph-plus"></i></button>
+                </div>
+                <div id="tastemakers-list" class="tastemakers-list"></div>
+                <div class="sidebar-footer">
+                    <button id="sync-all-btn" class="primary">Sync All</button>
+                    <button id="reset-btn">Reset Data</button>
+                </div>
+            </aside>
+
+            <section class="feed-container">
+                <div class="feed-header">
+                    <h2 id="feed-title" style="cursor:pointer" title="Reset Filter">Fresh Finds</h2>
+                    <div class="feed-filters">
+                        <select id="feed-sort">
+                            <option value="discovered">Recently Added</option>
+                            <option value="released">Release Date</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="feed-list" class="feed-list">
+                    <div class="empty-state" style="color:var(--text-dim); text-align:center; padding-top:40px;">
+                        Waiting for data...
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="player-bar">
+            <div id="player-container"></div>
+        </footer>
+    </div>
+
+    <!-- Reusing existing logic -->
+    <dialog id="add-tastemaker-modal" style="background:var(--bg-surface); color:#fff; border:1px solid var(--border); border-radius:16px; padding:24px;">
+        <form method="dialog">
+            <h3 style="margin-bottom:16px;">Add Tastemaker</h3>
+            <input type="text" id="tastemaker-input" placeholder="SoundCloud URL..." style="width:100%; padding:12px; background:var(--bg-root); border:1px solid var(--border); border-radius:8px; color:#fff; margin-bottom:16px;">
+            <div class="modal-actions">
+                <button value="cancel" style="background:none; border:none; color:var(--text-dim); cursor:pointer; margin-right:16px;">Cancel</button>
+                <button id="confirm-add-btn" value="default" style="background:var(--accent); border:none; padding:8px 16px; border-radius:8px; color:var(--accent-text); font-weight:700; cursor:pointer;">Add</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script type="module" src="js/main.js?v=16"></script>
+</body>
+</html>
