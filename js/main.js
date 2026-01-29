@@ -27,6 +27,7 @@ const feedList = document.getElementById('feed-list');
 const playerContainer = document.getElementById('player-container');
 
 const syncAllBtn = document.getElementById('sync-all-btn');
+const demoBtn = document.getElementById('demo-btn');
 
 // Initialization
 async function init() {
@@ -73,6 +74,10 @@ addBtn.addEventListener('click', () => {
     addModal.showModal();
 });
 
+demoBtn.addEventListener('click', () => {
+    loadDemoData();
+});
+
 confirmAddBtn.addEventListener('click', async (e) => {
     e.preventDefault(); // Handle form manually
     const input = tastemakerInput.value.trim();
@@ -99,6 +104,41 @@ confirmAddBtn.addEventListener('click', async (e) => {
 });
 
 // Actions
+async function loadDemoData() {
+    console.log('Loading demo data...');
+    const demoTms = [
+        { id: 'tm1', soundcloudId: 1, username: 'DJ Python', avatarUrl: '' },
+        { id: 'tm2', soundcloudId: 2, username: 'Ninja Tune', avatarUrl: '' },
+        { id: 'tm3', soundcloudId: 3, username: 'Lobster Theremin', avatarUrl: '' }
+    ];
+
+    for (const tm of demoTms) {
+        await db.tastemakers.put({ ...tm, lastSynced: new Date().toISOString() });
+    }
+
+    const demoTracks = [
+        { soundcloudId: 101, title: 'Angel', artist: 'DJ Python', soundcloudUrl: 'https://soundcloud.com/dj-python/angel' },
+        { soundcloudId: 102, title: 'Never See You Again', artist: 'Logic1000', soundcloudUrl: 'https://soundcloud.com/logic1000/never-see-you-again' },
+        { soundcloudId: 103, title: 'Braid', artist: 'Hessle Audio', soundcloudUrl: 'https://soundcloud.com/hessle-audio/braid' }
+    ];
+
+    for (const track of demoTracks) {
+        const trackId = await db.tracks.put({ ...track, addedAt: new Date().toISOString() });
+        
+        // Link to activities
+        await db.activities.put({
+            tasteMakerId: 'tm1',
+            trackId: trackId,
+            type: 'like',
+            discoveredAt: new Date().toISOString()
+        });
+    }
+
+    renderTastemakers();
+    renderFeed();
+    alert('Demo data loaded!');
+}
+
 async function syncTastemaker(tmId) {
     const tm = await db.tastemakers.get(tmId);
     if (!tm) return;

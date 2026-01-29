@@ -77,6 +77,13 @@ export async function handleCallback(code, state) {
         code: code
     });
 
+    // Local Development Hack: If we have a secret in localStorage, use it.
+    // This allows local dev without committing secrets to git.
+    const localSecret = localStorage.getItem('SC_SECRET');
+    if (localSecret) {
+        params.append('client_secret', localSecret);
+    }
+
     const response = await fetch('https://secure.soundcloud.com/oauth/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
