@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=11';
-import { db } from './db.js?v=11';
-import * as SCModule from './soundcloud.js?v=11';
+import { store, subscribe, setUser } from './store.js?v=13';
+import { db } from './db.js?v=13';
+import * as SCModule from './soundcloud.js?v=13';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -82,7 +82,7 @@ resetBtn.addEventListener('click', async () => {
         // Reset lastSynced for all tastemakers
         const tms = await db.tastemakers.toArray();
         for (const tm of tms) {
-            await db.tastemakers.update(tm.id, { lastSynced: 0 });
+            await db.tastemakers.update(tm.id, { lastSynced: 0, newCount: 0 });
         }
         
         window.location.reload();
@@ -214,7 +214,15 @@ async function syncTastemaker(tmId) {
             }
         }
 
-        await db.tastemakers.update(tmId, { lastSynced: new Date().toISOString() });
+        // Update with new count accumulation
+        const currentTm = await db.tastemakers.get(tmId);
+        const previousCount = currentTm.newCount || 0;
+
+        await db.tastemakers.update(tmId, { 
+            lastSynced: new Date().toISOString(),
+            newCount: previousCount + newItemsCount
+        });
+        
         console.log(`Synced ${tm.username}: ${newItemsCount} new items`);
         renderFeed();
     } catch (err) {
@@ -234,15 +242,18 @@ async function syncAll() {
 // Rendering
 async function renderTastemakers() {
     const list = await db.tastemakers.toArray();
-    tastemakerList.innerHTML = list.map(tm => `
+    tastemakerList.innerHTML = list.map(tm => {
+        const badge = tm.newCount > 0 ? `<span class="tm-badge">+${tm.newCount}</span>` : '';
+        return `
         <div class="tastemaker-item" data-id="${tm.id}">
             <div class="tm-info">
-                <span class="tm-name">${tm.username}</span>
+                <span class="tm-name">${tm.username} ${badge}</span>
                 <span class="tm-meta">Last sync: ${tm.lastSynced ? new Date(tm.lastSynced).toLocaleDateString() : 'Never'}</span>
             </div>
             <button class="sync-tm-btn" data-id="${tm.id}">🔄</button>
         </div>
-    `).join('');
+        `;
+    }).join('');
 
     // Add listeners to individual sync buttons
     document.querySelectorAll('.sync-tm-btn').forEach(btn => {

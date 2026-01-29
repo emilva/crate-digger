@@ -416,3 +416,13 @@ input[type="text"]:focus {
     padding: var(--space-lg);
     font-size: 0.9rem;
 }
+
+.tm-badge {
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 8px;
+    border: 1px solid var(--accent-dim);
+    padding: 1px 4px;
+    background: rgba(255, 85, 0, 0.1);
+}
