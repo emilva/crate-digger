@@ -27,7 +27,7 @@
     /* Layout */
     --header-height: 64px;
     --sidebar-width: 280px;
-    --player-height: 80px;
+    --player-height: 166px; /* Standard SC Widget Height */
 }
 
 * {
