@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=10';
-import { db } from './db.js?v=10';
-import * as SCModule from './soundcloud.js?v=10';
+import { store, subscribe, setUser } from './store.js?v=11';
+import { db } from './db.js?v=11';
+import * as SCModule from './soundcloud.js?v=11';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -312,7 +312,8 @@ function playTrack(url) {
             </iframe>
         `;
     } else {
-        const widget = SC.Widget(widgetElement);
+        // Use window.SC explicitly to avoid any confusion with local variables
+        const widget = window.SC.Widget(widgetElement);
         widget.load(url, { auto_play: true });
     }
 }
