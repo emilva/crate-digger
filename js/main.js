@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=6';
-import { db } from './db.js?v=6';
-import * as SCModule from './soundcloud.js?v=6';
+import { store, subscribe, setUser } from './store.js?v=7';
+import { db } from './db.js?v=7';
+import * as SCModule from './soundcloud.js?v=7';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -264,14 +264,20 @@ async function renderFeed() {
 
         return `
             <div class="track-card">
+                <div class="track-art-placeholder">
+                    <i class="ph ph-vinyl-record"></i>
+                </div>
                 <div class="track-info">
                     <span class="title">${track.title}</span>
                     <span class="artist">${track.artist}</span>
-                    <span class="activity">${act.type === 'like' ? '❤️ Liked' : '🔁 Reposted'} by ${tm.username}</span>
+                    <span class="activity">
+                        ${act.type === 'like' ? '<i class="ph ph-heart"></i> LIKED' : '<i class="ph ph-arrows-left-right"></i> REPOST'} 
+                        BY ${tm.username}
+                    </span>
                 </div>
                 <div class="track-actions">
-                    <button class="play-btn" data-url="${track.soundcloudUrl}">Play</button>
-                    <a href="${track.soundcloudUrl}" target="_blank" class="sc-link">View on SC</a>
+                    <button class="play-btn" data-url="${track.soundcloudUrl}">PLAY</button>
+                    <a href="${track.soundcloudUrl}" target="_blank" class="sc-link" style="color:var(--text-dim); text-decoration:none; font-size:0.8rem; margin-left:8px;">SC ↗</a>
                 </div>
             </div>
         `;
