@@ -53,7 +53,7 @@ export async function initiateAuth() {
     const authUrl = new URL('https://secure.soundcloud.com/authorize');
     authUrl.searchParams.append('client_id', CLIENT_ID);
     authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
-    authUrl.searchParams.append('response_type', 'code'); // PKCE uses 'code'
+    authUrl.searchParams.append('response_type', 'code');
     authUrl.searchParams.append('code_challenge', challenge);
     authUrl.searchParams.append('code_challenge_method', 'S256');
     authUrl.searchParams.append('state', state);
@@ -77,8 +77,6 @@ export async function handleCallback(code, state) {
         code: code
     });
 
-    // Local Development Hack: If we have a secret in localStorage, use it.
-    // This allows local dev without committing secrets to git.
     const localSecret = localStorage.getItem('SC_SECRET');
     if (localSecret) {
         params.append('client_secret', localSecret);
@@ -92,7 +90,6 @@ export async function handleCallback(code, state) {
 
     if (!response.ok) {
         const err = await response.json();
-        // This is where it will fail until the app is made "Public"
         throw new Error(err.error_description || 'Token exchange failed');
     }
 
@@ -120,7 +117,6 @@ export async function refreshAccessToken() {
         refresh_token: authData.refreshToken
     });
 
-    // Local Development Hack: Inject secret for refresh too
     const localSecret = localStorage.getItem('SC_SECRET');
     if (localSecret) {
         params.append('client_secret', localSecret);
@@ -170,44 +166,33 @@ export async function fetchAuthenticated(url) {
     return res.json();
 }
 
-// API Methods... (omitting resolveUser etc. for brevity as they haven't changed)
+// API Methods aligned with Public OpenAPI Specs
 export async function resolveUser(url) {
     const encodedUrl = encodeURIComponent(url);
+    // V1 Resolve endpoint
     const data = await fetchAuthenticated(`https://api.soundcloud.com/resolve?url=${encodedUrl}`);
     if (data.kind !== 'user') throw new Error('URL does not point to a SoundCloud user');
     return data;
 }
 
 export async function getUserLikes(userId) {
-
-    // Revert to V1 API which supports CORS
-
-    const data = await fetchAuthenticated(`https://api.soundcloud.com/users/${userId}/favorites?limit=50&linked_partitioning=1`);
-
-    return (data.collection || []).map(item => ({
-
-        ...item,
-
+    // V1 Public API path: /users/{id}/favorites
+    // Returns a list of tracks directly (not a collection wrapper)
+    const data = await fetchAuthenticated(`https://api.soundcloud.com/users/${userId}/favorites?limit=50`);
+    
+    // OpenAPI /favorites returns Array<Track>
+    const tracks = Array.isArray(data) ? data : (data.collection || []);
+    
+    return tracks.map(track => ({
+        ...track,
         type: 'like',
-
-        created_at: item.created_at
-
+        created_at: track.created_at
     }));
-
 }
 
-
-
 export async function getUserReposts(userId) {
-
-    // Reposts are NOT available in the public V1 API (405 Method Not Allowed)
-
-    // and V2 API blocks CORS. 
-
-    // We return empty array for now to prevent breaking the app.
-
-    console.warn('Repost fetching is currently disabled due to API restrictions.');
-
+    // Reposts are not in the Public OpenAPI spec, so we keep them disabled 
+    // to ensure the app stays functional.
+    console.warn('Reposts are not available in the Public SoundCloud API.');
     return [];
-
 }

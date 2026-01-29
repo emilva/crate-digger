@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=4';
-import { db } from './db.js?v=4';
-import * as SCModule from './soundcloud.js?v=4';
+import { store, subscribe, setUser } from './store.js?v=5';
+import { db } from './db.js?v=5';
+import * as SCModule from './soundcloud.js?v=5';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
