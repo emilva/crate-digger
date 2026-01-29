@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=7';
-import { db } from './db.js?v=7';
-import * as SCModule from './soundcloud.js?v=7';
+import { store, subscribe, setUser } from './store.js?v=8';
+import { db } from './db.js?v=8';
+import * as SCModule from './soundcloud.js?v=8';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -27,7 +27,7 @@ const feedList = document.getElementById('feed-list');
 const playerContainer = document.getElementById('player-container');
 
 const syncAllBtn = document.getElementById('sync-all-btn');
-const demoBtn = document.getElementById('demo-btn');
+const resetBtn = document.getElementById('reset-btn');
 
 // Initialization
 async function init() {
@@ -74,8 +74,11 @@ addBtn.addEventListener('click', () => {
     addModal.showModal();
 });
 
-demoBtn.addEventListener('click', () => {
-    loadDemoData();
+resetBtn.addEventListener('click', async () => {
+    if (confirm('Are you sure you want to delete all data? This cannot be undone.')) {
+        await db.delete();
+        window.location.reload();
+    }
 });
 
 confirmAddBtn.addEventListener('click', async (e) => {
