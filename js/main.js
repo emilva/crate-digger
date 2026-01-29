@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=3';
-import { db } from './db.js?v=3';
-import * as SCModule from './soundcloud.js?v=3';
+import { store, subscribe, setUser } from './store.js?v=4';
+import { db } from './db.js?v=4';
+import * as SCModule from './soundcloud.js?v=4';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -145,12 +145,12 @@ async function syncTastemaker(tmId) {
 
     store.loading = true;
     try {
-        const [likes] = await Promise.all([
+        const [likes, reposts] = await Promise.all([
             SC.getUserLikes(tm.soundcloudId),
-            // SC.getUserReposts(tm.soundcloudId) // Disable reposts for now
+            SC.getUserReposts(tm.soundcloudId)
         ]);
 
-        const allActivity = [...likes]; //, ...reposts];
+        const allActivity = [...likes, ...reposts];
         let newItemsCount = 0;
 
         for (const item of allActivity) {
