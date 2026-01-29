@@ -1,0 +1,223 @@
+:root {
+    --bg-dark: #121212;
+    --bg-panel: #1e1e1e;
+    --bg-card: #2c2c2c;
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --accent: #ff5500; /* SoundCloud Orange */
+    --accent-hover: #ff7733;
+    --border: #333333;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --header-height: 60px;
+    --player-height: 80px; /* Min height for widget */
+    --sidebar-width: 300px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    height: 100vh;
+    overflow: hidden;
+}
+
+#app {
+    display: grid;
+    grid-template-rows: var(--header-height) 1fr auto;
+    height: 100vh;
+}
+
+/* Header */
+.app-header {
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--spacing-lg);
+}
+
+.logo {
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+}
+
+button {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: var(--border);
+}
+
+button.primary {
+    background-color: var(--accent);
+    border-color: var(--accent);
+    color: white;
+}
+
+button.primary:hover {
+    background-color: var(--accent-hover);
+}
+
+/* Layout */
+.app-layout {
+    display: grid;
+    grid-template-columns: var(--sidebar-width) 1fr;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: var(--bg-panel);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-header {
+    padding: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.tastemakers-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-sm);
+}
+
+.tastemaker-item {
+    padding: var(--spacing-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.tastemaker-item:hover {
+    background-color: var(--bg-card);
+}
+
+.tastemaker-item.active {
+    background-color: var(--bg-card);
+    border-left: 3px solid var(--accent);
+}
+
+.sidebar-footer {
+    padding: var(--spacing-md);
+    border-top: 1px solid var(--border);
+}
+
+#sync-all-btn {
+    width: 100%;
+}
+
+/* Feed */
+.feed-container {
+    background-color: var(--bg-dark);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.feed-header {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.feed-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.track-card {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.track-info .title {
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: block;
+}
+
+.track-info .artist {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    display: block;
+}
+
+.track-info .activity {
+    font-size: 0.8rem;
+    color: var(--accent);
+    margin-top: 4px;
+    display: block;
+}
+
+.track-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+/* Player Bar */
+.player-bar {
+    background-color: var(--bg-panel);
+    border-top: 1px solid var(--border);
+    height: var(--player-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* padding: 0 var(--spacing-md); */
+}
+
+#player-container {
+    width: 100%;
+    height: 100%;
+}
+
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
+.badge {
+    background-color: var(--accent);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}

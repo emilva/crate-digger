@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Authenticating...</title>
+</head>
+<body>
+    <p>Authenticating with SoundCloud...</p>
+    <script>
+        // Parse query parameters
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        const state = params.get('state');
+        const error = params.get('error');
+
+        if (code && state) {
+            // Send to main window via BroadcastChannel
+            const channel = new BroadcastChannel('sc_auth_channel');
+            channel.postMessage({ type: 'oauth_code', code, state });
+            
+            // Also try window.opener for older flows
+            if (window.opener) {
+                window.opener.postMessage({ type: 'oauth_code', code, state }, '*');
+            }
+            
+            document.body.innerHTML = '<p>Success! You can close this window.</p>';
+            setTimeout(() => window.close(), 1000);
+        } else if (error) {
+            document.body.innerHTML = `<p style="color:red">Error: ${error}</p>`;
+            console.error('OAuth Error:', error);
+        }
+    </script>
+</body>
+</html>

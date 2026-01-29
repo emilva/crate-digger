@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundCloud Tastemaker Discovery</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <!-- Dexie.js for IndexedDB -->
+    <script src="https://unpkg.com/dexie@latest/dist/dexie.mjs" type="module"></script>
+    <!-- SoundCloud Widget API -->
+    <script src="https://w.soundcloud.com/player/api.js"></script>
+</head>
+<body>
+    <div id="app">
+        <header class="app-header">
+            <div class="logo">SC Discovery</div>
+            <div class="user-controls" id="auth-status">
+                <button id="login-btn">Connect SoundCloud</button>
+            </div>
+        </header>
+
+        <main class="app-layout">
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <h2>Tastemakers</h2>
+                    <button id="add-tastemaker-btn" class="icon-btn" aria-label="Add Tastemaker">+</button>
+                </div>
+                <div id="tastemakers-list" class="tastemakers-list">
+                    <!-- Tastemakers will be rendered here -->
+                    <div class="loading">Loading...</div>
+                </div>
+                <div class="sidebar-footer">
+                    <button id="sync-all-btn">Sync All</button>
+                </div>
+            </aside>
+
+            <section class="feed-container">
+                <div class="feed-header">
+                    <h2>Discovery Feed</h2>
+                    <div class="feed-filters">
+                        <span id="new-count" class="badge hidden">0 new</span>
+                    </div>
+                </div>
+                <div id="feed-list" class="feed-list">
+                    <!-- Feed items will be rendered here -->
+                    <div class="empty-state">
+                        <p>Select a tastemaker or sync to see tracks.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer class="player-bar">
+            <div id="player-container">
+                <!-- SoundCloud Widget will be embedded here -->
+            </div>
+        </footer>
+    </div>
+
+    <!-- Modals -->
+    <dialog id="add-tastemaker-modal">
+        <form method="dialog">
+            <h3>Add Tastemaker</h3>
+            <input type="text" id="tastemaker-input" placeholder="SoundCloud Profile URL or Username" required>
+            <div class="modal-actions">
+                <button value="cancel">Cancel</button>
+                <button id="confirm-add-btn" value="default">Add</button>
+            </div>
+        </form>
+    </dialog>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
