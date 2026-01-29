@@ -1,11 +1,11 @@
-import { store, subscribe, setUser } from './store.js?v=8';
-import { db } from './db.js?v=8';
-import * as SCModule from './soundcloud.js?v=8';
+import { store, subscribe, setUser } from './store.js?v=9';
+import { db } from './db.js?v=9';
+import * as SCModule from './soundcloud.js?v=9';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
 
-const SC = {
+const LocalSC = {
     initiateAuth: SCModule.initiateAuth,
     handleCallback: SCModule.handleCallback,
     getAccessToken: SCModule.getAccessToken,
@@ -14,7 +14,7 @@ const SC = {
     getUserReposts: SCModule.getUserReposts
 };
 
-console.log('Constructed SC Object:', SC);
+console.log('Constructed LocalSC Object:', LocalSC);
 
 // DOM Elements
 const loginBtn = document.getElementById('login-btn');
@@ -32,7 +32,7 @@ const resetBtn = document.getElementById('reset-btn');
 // Initialization
 async function init() {
     // Check auth status
-    const token = await SC.getAccessToken();
+    const token = await LocalSC.getAccessToken();
     if (token) {
         loginBtn.textContent = 'Connected';
         loginBtn.disabled = true;
@@ -44,7 +44,7 @@ async function init() {
     authChannel.onmessage = async (event) => {
         if (event.data.type === 'oauth_code') {
             try {
-                await SC.handleCallback(event.data.code, event.data.state);
+                await LocalSC.handleCallback(event.data.code, event.data.state);
                 loginBtn.textContent = 'Connected';
                 loginBtn.disabled = true;
                 loadData();
@@ -58,10 +58,10 @@ async function init() {
 
 // Event Listeners
 loginBtn.addEventListener('click', () => {
-    if (typeof SC.initiateAuth === 'function') {
-        SC.initiateAuth();
+    if (typeof LocalSC.initiateAuth === 'function') {
+        LocalSC.initiateAuth();
     } else {
-        console.error('SC.initiateAuth is not a function. SC object:', SC);
+        console.error('LocalSC.initiateAuth is not a function. SC object:', LocalSC);
         alert('Internal Error: SoundCloud auth function not loaded. Please refresh.');
     }
 });
@@ -88,7 +88,7 @@ confirmAddBtn.addEventListener('click', async (e) => {
 
     try {
         // Resolve user
-        const user = await SC.resolveUser(input);
+        const user = await LocalSC.resolveUser(input);
         
         // Add to DB
         await db.tastemakers.add({
@@ -149,8 +149,8 @@ async function syncTastemaker(tmId) {
     store.loading = true;
     try {
         const [likes, reposts] = await Promise.all([
-            SC.getUserLikes(tm.soundcloudId),
-            SC.getUserReposts(tm.soundcloudId)
+            LocalSC.getUserLikes(tm.soundcloudId),
+            LocalSC.getUserReposts(tm.soundcloudId)
         ]);
 
         const allActivity = [...likes, ...reposts];
