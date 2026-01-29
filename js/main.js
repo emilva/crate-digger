@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=13';
-import { db } from './db.js?v=13';
-import * as SCModule from './soundcloud.js?v=13';
+import { store, subscribe, setUser } from './store.js?v=14';
+import { db } from './db.js?v=14';
+import * as SCModule from './soundcloud.js?v=14';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -28,6 +28,7 @@ const playerContainer = document.getElementById('player-container');
 
 const syncAllBtn = document.getElementById('sync-all-btn');
 const resetBtn = document.getElementById('reset-btn');
+const sortSelect = document.getElementById('feed-sort');
 
 // Initialization
 async function init() {
@@ -88,6 +89,11 @@ resetBtn.addEventListener('click', async () => {
         window.location.reload();
     }
 });
+
+sortSelect.addEventListener('change', () => {
+    renderFeed();
+});
+
 
 confirmAddBtn.addEventListener('click', async (e) => {
     e.preventDefault(); // Handle form manually
@@ -189,7 +195,8 @@ async function syncTastemaker(tmId) {
                     soundcloudUrl: item.permalink_url || item.track?.permalink_url,
                     title: item.title || item.track?.title,
                     artist: item.user?.username || item.track?.user?.username,
-                    addedAt: new Date().toISOString()
+                    addedAt: new Date().toISOString(),
+                    uploadDate: item.created_at // Save real release date
                 });
             }
 
@@ -265,24 +272,47 @@ async function renderTastemakers() {
 }
 
 async function renderFeed() {
-    // Get all activities sorted by date
-    const activities = await db.activities.orderBy('discoveredAt').reverse().toArray();
-    if (activities.length === 0) {
-        feedList.innerHTML = '<div class="empty-state">No tracks discovered yet. Add a tastemaker and sync!</div>';
-        return;
-    }
-
-    // Fetch tracks and tastemakers for enrichment
+    // Fetch all needed data first
+    let activities = await db.activities.toArray();
     const tracks = await db.tracks.toArray();
     const tms = await db.tastemakers.toArray();
     
     const trackMap = new Map(tracks.map(t => [t.id, t]));
     const tmMap = new Map(tms.map(tm => [tm.id, tm]));
 
-    feedList.innerHTML = activities.map(act => {
+    // Enrich activities so we can sort them
+    const enrichedFeed = activities.map(act => {
         const track = trackMap.get(act.trackId);
         const tm = tmMap.get(act.tasteMakerId);
-        if (!track || !tm) return '';
+        if (!track || !tm) return null;
+        
+        return { ...act, track, tm };
+    }).filter(item => item !== null);
+
+    // Sort based on selection
+    const sortBy = sortSelect.value; // 'discovered' or 'released'
+    
+    enrichedFeed.sort((a, b) => {
+        if (sortBy === 'released') {
+            // Sort by Track Upload Date (Newest First)
+            const dateA = new Date(a.track.uploadDate || 0);
+            const dateB = new Date(b.track.uploadDate || 0);
+            return dateB - dateA;
+        } else {
+            // Sort by Discovery Date (Newest First) - Default
+            const dateA = new Date(a.discoveredAt || 0);
+            const dateB = new Date(b.discoveredAt || 0);
+            return dateB - dateA;
+        }
+    });
+
+    if (enrichedFeed.length === 0) {
+        feedList.innerHTML = '<div class="empty-state">No tracks discovered yet. Add a tastemaker and sync!</div>';
+        return;
+    }
+
+    feedList.innerHTML = enrichedFeed.map(item => {
+        const { track, tm } = item;
 
         return `
             <div class="track-card">
