@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=15';
-import { db } from './db.js?v=15';
-import * as SCModule from './soundcloud.js?v=15';
+import { store, subscribe, setUser } from './store.js?v=16';
+import { db } from './db.js?v=16';
+import * as SCModule from './soundcloud.js?v=16';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -29,6 +29,7 @@ const playerContainer = document.getElementById('player-container');
 const syncAllBtn = document.getElementById('sync-all-btn');
 const resetBtn = document.getElementById('reset-btn');
 const sortSelect = document.getElementById('feed-sort');
+const feedTitle = document.getElementById('feed-title');
 
 // Initialization
 async function init() {
@@ -37,8 +38,10 @@ async function init() {
     if (token) {
         loginBtn.textContent = 'Connected';
         loginBtn.disabled = true;
-        loadData();
     }
+    
+    // Always load cached data regardless of connection status
+    loadData();
 
     // Auth Listener
     const authChannel = new BroadcastChannel('sc_auth_channel');
@@ -92,6 +95,11 @@ resetBtn.addEventListener('click', async () => {
 
 sortSelect.addEventListener('change', () => {
     renderFeed();
+});
+
+feedTitle.addEventListener('click', () => {
+    document.querySelectorAll('.tastemaker-item').forEach(el => el.classList.remove('active'));
+    renderFeed(); // No ID = All
 });
 
 
@@ -254,7 +262,7 @@ async function renderTastemakers() {
         const badge = tm.newCount > 0 ? `<span class="tm-badge">+${tm.newCount}</span>` : '';
         return `
         <div class="tastemaker-item" data-id="${tm.id}">
-            <div class="tm-info">
+            <div class="tm-info" onclick="filterFeed(${tm.id})">
                 <span class="tm-name">${tm.username} ${badge}</span>
                 <span class="tm-meta">Last sync: ${tm.lastSynced ? new Date(tm.lastSynced).toLocaleDateString() : 'Never'}</span>
             </div>
@@ -270,11 +278,29 @@ async function renderTastemakers() {
             syncTastemaker(parseInt(btn.dataset.id));
         });
     });
+
+    // Add listeners to rows for filtering
+    document.querySelectorAll('.tastemaker-item').forEach(item => {
+        item.addEventListener('click', () => {
+            // Remove active class from all
+            document.querySelectorAll('.tastemaker-item').forEach(el => el.classList.remove('active'));
+            // Add to current
+            item.classList.add('active');
+            
+            renderFeed(parseInt(item.dataset.id));
+        });
+    });
 }
 
-async function renderFeed() {
+async function renderFeed(filterTmId = null) {
     // Fetch all needed data first
     let activities = await db.activities.toArray();
+    
+    // Filter if requested
+    if (filterTmId) {
+        activities = activities.filter(act => act.tasteMakerId === filterTmId);
+    }
+
     const tracks = await db.tracks.toArray();
     const tms = await db.tastemakers.toArray();
     
