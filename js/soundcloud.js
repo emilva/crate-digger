@@ -2,7 +2,20 @@ import { db } from './db.js';
 
 // TODO: Replace with your actual Client ID after registering as a Public Client
 const CLIENT_ID = 'YOUR_SOUNDCLOUD_CLIENT_ID'; 
-const REDIRECT_URI = window.location.origin + '/soundcloud-tastemaker/callback.html';
+
+// Construct the redirect URI dynamically
+// For GitHub Pages: https://emilva.github.io/crate-digger/callback.html
+// For Local: http://localhost:8000/callback.html
+const REDIRECT_URI = (() => {
+    const url = new URL(window.location.href);
+    const pathParts = url.pathname.split('/');
+    // Handle the case where we might be in a subdirectory (like on GitHub Pages)
+    // or at the root (like localhost:8000)
+    if (pathParts[1] === 'crate-digger') {
+        return `${url.origin}/crate-digger/callback.html`;
+    }
+    return `${url.origin}/callback.html`;
+})();
 
 // PKCE Helpers
 function generateRandomString(length) {
