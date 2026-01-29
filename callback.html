@@ -7,27 +7,32 @@
 <body>
     <p>Authenticating with SoundCloud...</p>
     <script>
-        // Parse query parameters
-        const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
+        // In Implicit Grant, parameters are in the URL fragment (#)
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        
+        const accessToken = params.get('access_token');
         const state = params.get('state');
-        const error = params.get('error');
+        const expiresIn = params.get('expires_in');
 
-        if (code && state) {
-            // Send to main window via BroadcastChannel
+        if (accessToken) {
             const channel = new BroadcastChannel('sc_auth_channel');
-            channel.postMessage({ type: 'oauth_code', code, state });
-            
-            // Also try window.opener for older flows
-            if (window.opener) {
-                window.opener.postMessage({ type: 'oauth_code', code, state }, '*');
-            }
+            channel.postMessage({ 
+                type: 'oauth_token', 
+                accessToken, 
+                state, 
+                expiresIn 
+            });
             
             document.body.innerHTML = '<p>Success! You can close this window.</p>';
             setTimeout(() => window.close(), 1000);
-        } else if (error) {
-            document.body.innerHTML = `<p style="color:red">Error: ${error}</p>`;
-            console.error('OAuth Error:', error);
+        } else {
+            // Check for errors in query params
+            const queryParams = new URLSearchParams(window.location.search);
+            const error = queryParams.get('error');
+            if (error) {
+                document.body.innerHTML = `<p style="color:red">Error: ${error}</p>`;
+            }
         }
     </script>
 </body>
