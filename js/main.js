@@ -1,6 +1,6 @@
-import { store, subscribe, setUser } from './store.js?v=20';
-import { db } from './db.js?v=20';
-import * as SCModule from './soundcloud.js?v=20';
+import { store, subscribe, setUser } from './store.js?v=21';
+import { db } from './db.js?v=21';
+import * as SCModule from './soundcloud.js?v=21';
 
 console.log('Main.js loaded');
 console.log('Imported SC Module:', SCModule);
@@ -358,6 +358,7 @@ async function renderFeed(filterTmId = null) {
                 <div class="track-actions">
                     <button class="play-btn" data-url="${track.soundcloudUrl}">PLAY</button>
                     <a href="${track.soundcloudUrl}" target="_blank" class="sc-link" style="color:var(--text-dim); text-decoration:none; font-size:0.8rem; margin-left:8px;">SC ↗</a>
+                    <button class="dismiss-btn icon-btn" data-id="${item.id}" title="Dismiss" style="border:none; margin-left:8px;"><i class="ph ph-x"></i></button>
                 </div>
             </div>
         `;
@@ -368,6 +369,25 @@ async function renderFeed(filterTmId = null) {
         btn.addEventListener('click', () => {
             const url = btn.dataset.url;
             playTrack(url);
+        });
+    });
+
+    // Add dismiss listeners
+    document.querySelectorAll('.dismiss-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const activityId = parseInt(btn.dataset.id);
+            
+            // UI Removal
+            const card = btn.closest('.track-card');
+            card.style.transition = 'opacity 0.2s, transform 0.2s';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.95)';
+            
+            setTimeout(() => card.remove(), 200);
+            
+            // DB Deletion
+            await db.activities.delete(activityId);
         });
     });
 }
