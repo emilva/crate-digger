@@ -1,6 +1,6 @@
-import { store, subscribe } from './store.js?v=30';
-import { db } from './db.js?v=30';
-import * as SCModule from './soundcloud.js?v=30';
+import { store, subscribe } from './store.js?v=31';
+import { db } from './db.js?v=31';
+import * as SCModule from './soundcloud.js?v=31';
 
 const LocalSC = {
     initiateAuth: SCModule.initiateAuth,
@@ -133,8 +133,13 @@ async function syncTastemaker(tmId) {
         const likes = await LocalSC.getUserLikes(tm.soundcloudId);
         let newItemsCount = 0;
 
-        for (const item of likes) {
-            // Upsert track
+        // API returns most-recently-liked first. Assign descending timestamps
+        // so discoveredAt preserves that order for sorting.
+        const baseTime = Date.now();
+
+        for (let i = 0; i < likes.length; i++) {
+            const item = likes[i];
+
             let trackId;
             const scId = item.id;
 
@@ -150,11 +155,10 @@ async function syncTastemaker(tmId) {
                     artist: item.user?.username,
                     artworkUrl: item.artwork_url,
                     addedAt: new Date().toISOString(),
-                    uploadDate: item.created_at // Track upload date
+                    uploadDate: item.created_at
                 });
             }
 
-            // Check if activity already exists
             const existingActivity = await db.activities
                 .where('[tasteMakerId+trackId+type]')
                 .equals([tm.id, trackId, item.type])
@@ -165,8 +169,7 @@ async function syncTastemaker(tmId) {
                     tasteMakerId: tm.id,
                     trackId: trackId,
                     type: item.type,
-                    likedAt: item.liked_at || null,
-                    discoveredAt: new Date().toISOString()
+                    discoveredAt: new Date(baseTime - (i * 1000)).toISOString()
                 });
                 newItemsCount++;
             }
@@ -181,7 +184,6 @@ async function syncTastemaker(tmId) {
         renderTastemakers();
     } catch (err) {
         console.error(`Failed to sync ${tm.username}`, err);
-        alert(`Sync failed for ${tm.username}: ${err.message}`);
     } finally {
         store.loading = false;
     }
@@ -276,11 +278,8 @@ async function renderFeed(filterTmId = null) {
     enrichedFeed.sort((a, b) => {
         if (sortBy === 'released') {
             return new Date(b.track.uploadDate || 0) - new Date(a.track.uploadDate || 0);
-        } else if (sortBy === 'liked') {
-            // Sort by when the tastemaker liked the track (from SoundCloud)
-            return new Date(b.likedAt || b.discoveredAt || 0) - new Date(a.likedAt || a.discoveredAt || 0);
         } else {
-            // discovered: sort by when we synced it
+            // Default: sort by discoveredAt (preserves API's most-recently-liked order)
             return new Date(b.discoveredAt || 0) - new Date(a.discoveredAt || 0);
         }
     });
@@ -297,8 +296,6 @@ async function renderFeed(filterTmId = null) {
             ? `<img src="${track.artworkUrl.replace('-large', '-t200x200')}" alt="" class="track-art" loading="lazy">`
             : `<div class="track-art-placeholder"><i class="ph-fill ph-disc"></i></div>`;
 
-        const likedTimeStr = item.likedAt ? timeAgo(item.likedAt) : '';
-
         return `
             <div class="track-card">
                 ${artworkHtml}
@@ -307,7 +304,7 @@ async function renderFeed(filterTmId = null) {
                     <span class="artist">${track.artist || 'Unknown'}</span>
                     <span class="activity">
                         ${item.type === 'like' ? '<i class="ph ph-heart"></i> LIKED' : '<i class="ph ph-arrows-left-right"></i> REPOST'}
-                        BY ${tm.username}${likedTimeStr ? ` · ${likedTimeStr}` : ''}
+                        BY ${tm.username}
                     </span>
                 </div>
                 <div class="track-actions">

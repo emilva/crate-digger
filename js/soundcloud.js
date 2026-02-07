@@ -175,30 +175,27 @@ export async function resolveUser(url) {
 }
 
 export async function getUserLikes(userId, maxPages = 4) {
-    // V2 API: /users/{id}/likes returns { collection: [{ created_at, track }], next_href }
-    // created_at here is WHEN the user liked the track (not the track upload date)
+    // V1 API: /users/{id}/favorites returns Array<Track> ordered by most-recently-liked first
+    // No liked_at timestamp available in V1, but order is preserved
     let allItems = [];
-    let url = `https://api-v2.soundcloud.com/users/${userId}/likes?limit=50&client_id=${CLIENT_ID}`;
 
     for (let page = 0; page < maxPages; page++) {
-        const data = await fetchAuthenticated(url);
-        const collection = data.collection || [];
+        const offset = page * 50;
+        const data = await fetchAuthenticated(
+            `https://api.soundcloud.com/users/${userId}/favorites?limit=50&offset=${offset}`
+        );
 
-        if (collection.length === 0) break;
+        const tracks = Array.isArray(data) ? data : (data.collection || []);
+        if (tracks.length === 0) break;
 
-        for (const item of collection) {
-            // V2 likes can contain tracks or playlists; we only want tracks
-            if (item.track) {
-                allItems.push({
-                    ...item.track,
-                    type: 'like',
-                    liked_at: item.created_at // When the user liked this track
-                });
-            }
+        for (const track of tracks) {
+            allItems.push({
+                ...track,
+                type: 'like'
+            });
         }
 
-        if (!data.next_href) break;
-        url = data.next_href;
+        if (tracks.length < 50) break; // last page
     }
 
     return allItems;
