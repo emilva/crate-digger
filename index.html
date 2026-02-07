@@ -13,7 +13,7 @@
     <!-- Icons: Phosphor Icons (clean, technical look) -->
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
-    <link rel="stylesheet" href="css/styles.css?v=23">
+    <link rel="stylesheet" href="css/styles.css?v=30">
     <!-- Dexie.js for IndexedDB -->
     <script src="https://unpkg.com/dexie@latest/dist/dexie.mjs" type="module"></script>
     <!-- SoundCloud Widget API -->
@@ -51,7 +51,8 @@
                 <div class="feed-header">
                     <h2 id="feed-title" style="cursor:pointer" title="Show All">Discovery Feed</h2>
                     <div class="feed-filters">
-                        <select id="feed-sort" style="background:var(--bg-root); color:var(--text-dim); border:1px solid var(--border-light); padding:4px; font-family:var(--font-mono); text-transform:uppercase; font-size:0.7rem;">
+                        <select id="feed-sort">
+                            <option value="liked">Newest Liked</option>
                             <option value="discovered">Newest Discovered</option>
                             <option value="released">Newest Released</option>
                         </select>
@@ -86,6 +87,6 @@
         </form>
     </dialog>
 
-    <script type="module" src="js/main.js?v=21"></script>
+    <script type="module" src="js/main.js?v=30"></script>
 </body>
 </html>

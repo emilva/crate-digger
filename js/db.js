@@ -7,7 +7,16 @@ db.version(1).stores({
     tracks: '++id, &soundcloudId, soundcloudUrl, title, artist, addedAt',
     activities: '++id, tasteMakerId, trackId, type, discoveredAt',
     bookmarks: '++id, trackId, addedAt',
-    auth: 'key' // Single row for storing tokens: { key: 'tokens', ... }
+    auth: 'key'
+});
+
+db.version(2).stores({
+    activities: '++id, tasteMakerId, trackId, type, [tasteMakerId+trackId+type], discoveredAt'
+});
+
+// V3: Add likedAt index for sorting by when tracks were actually liked
+db.version(3).stores({
+    activities: '++id, tasteMakerId, trackId, type, [tasteMakerId+trackId+type], discoveredAt, likedAt'
 });
 
 export async function clearAllData() {

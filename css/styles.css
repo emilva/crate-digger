@@ -303,6 +303,12 @@ button#reset-btn:hover { color: #ef4444; /* Red for destructive action */ }
     /* No background change, keeps it clean. Just simple interaction. */
 }
 
+.track-art {
+    width: 64px; height: 64px;
+    border-radius: var(--radius-sm);
+    object-fit: cover;
+}
+
 .track-art-placeholder {
     width: 64px; height: 64px;
     background-color: var(--bg-card);

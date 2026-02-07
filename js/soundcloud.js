@@ -166,33 +166,45 @@ export async function fetchAuthenticated(url) {
     return res.json();
 }
 
-// API Methods aligned with Public OpenAPI Specs
+// API Methods
 export async function resolveUser(url) {
     const encodedUrl = encodeURIComponent(url);
-    // V1 Resolve endpoint
     const data = await fetchAuthenticated(`https://api.soundcloud.com/resolve?url=${encodedUrl}`);
     if (data.kind !== 'user') throw new Error('URL does not point to a SoundCloud user');
     return data;
 }
 
-export async function getUserLikes(userId) {
-    // V1 Public API path: /users/{id}/favorites
-    // Returns a list of tracks directly (not a collection wrapper)
-    const data = await fetchAuthenticated(`https://api.soundcloud.com/users/${userId}/favorites?limit=50`);
-    
-    // OpenAPI /favorites returns Array<Track>
-    const tracks = Array.isArray(data) ? data : (data.collection || []);
-    
-    return tracks.map(track => ({
-        ...track,
-        type: 'like',
-        created_at: track.created_at
-    }));
+export async function getUserLikes(userId, maxPages = 4) {
+    // V2 API: /users/{id}/likes returns { collection: [{ created_at, track }], next_href }
+    // created_at here is WHEN the user liked the track (not the track upload date)
+    let allItems = [];
+    let url = `https://api-v2.soundcloud.com/users/${userId}/likes?limit=50&client_id=${CLIENT_ID}`;
+
+    for (let page = 0; page < maxPages; page++) {
+        const data = await fetchAuthenticated(url);
+        const collection = data.collection || [];
+
+        if (collection.length === 0) break;
+
+        for (const item of collection) {
+            // V2 likes can contain tracks or playlists; we only want tracks
+            if (item.track) {
+                allItems.push({
+                    ...item.track,
+                    type: 'like',
+                    liked_at: item.created_at // When the user liked this track
+                });
+            }
+        }
+
+        if (!data.next_href) break;
+        url = data.next_href;
+    }
+
+    return allItems;
 }
 
 export async function getUserReposts(userId) {
-    // Reposts are not in the Public OpenAPI spec, so we keep them disabled 
-    // to ensure the app stays functional.
-    console.warn('Reposts are not available in the Public SoundCloud API.');
+    // Reposts are not in the Public SoundCloud API spec
     return [];
 }
